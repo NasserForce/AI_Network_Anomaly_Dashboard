@@ -20,7 +20,7 @@ The prototype uses simulated data to demonstrate the full user experience. In a 
 
 Innovation
 
-Most network monitoring tools are designed for experts and present overwhelming amounts of raw data. This dashboard takes a different approach — using AI severity classification, confidence scoring, and plain-language recommendations to make threat detection accessible to anyone responsible for a network, including students learning cybersecurity for the first time.
+Most network monitoring tools are designed for experts and present overwhelming amounts of raw data. This dashboard takes a different approach - using AI severity classification, confidence scoring, and plain-language recommendations to make threat detection accessible to anyone responsible for a network, including students learning cybersecurity for the first time.
 
 Deliverables
 
