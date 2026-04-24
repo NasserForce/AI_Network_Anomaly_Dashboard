@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Network Anomaly Detection</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f0f2f5;
+    --surface: #ffffff;
+    --surface2: #f8f9fb;
+    --border: #e4e8ef;
+    --border2: #d0d7e3;
+    --text: #1a2236;
+    --text2: #5a6a85;
+    --text3: #8a9ab5;
+    --blue: #2563eb;
+    --blue-light: #eff4ff;
+    --blue-mid: #dbeafe;
+    --red: #ef4444;
+    --red-light: #fef2f2;
+    --orange: #f97316;
+    --orange-light: #fff7ed;
+    --green: #22c55e;
+    --green-light: #f0fdf4;
+    --cyan: #06b6d4;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+    --radius: 14px;
+    --radius-sm: 8px;
+    --radius-xs: 5px;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ===== NAV ===== */
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+  }
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .nav-icon {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.35);
+  }
+  .nav-brand span { color: var(--blue); }
+  .nav-right { display: flex; align-items: center; gap: 14px; }
+  .nav-status {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--green-light);
+    color: #16a34a;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 11px;
+    border-radius: 20px;
+    border: 1px solid #bbf7d0;
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+  }
+  .user-pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 13px 5px 5px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 25px;
+    cursor: pointer;
+  }
+  .user-avatar {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, #64748b, #94a3b8);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 13px;
+  }
+  .user-pill span { font-size: 13px; font-weight: 500; }
+
+  /* ===== VIEWS ===== */
+  .view { display: none; padding: 28px; max-width: 1280px; margin: 0 auto; animation: fadeIn 0.22s ease; }
+  .view.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ===== PAGE HEADER ===== */
+  .page-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 24px;
+  }
+  .back-btn {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text2);
+    font-size: 16px;
+    transition: all 0.15s;
+  }
+  .back-btn:hover { background: var(--bg); border-color: var(--blue); color: var(--blue); }
+  .page-title { font-size: 24px; font-weight: 700; }
+
+  /* ===== CARDS ===== */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+  .card-pad { padding: 20px; }
+
+  /* ===== DASHBOARD ===== */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.7fr;
+    grid-template-rows: auto auto;
+    gap: 18px;
+  }
+  .dashboard-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 18px;
+    margin-top: 0;
+  }
+  .card-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    font-size: 15px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-header-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: var(--red-light);
+    color: var(--red);
+    letter-spacing: 0.02em;
+  }
+  .card-header-tag.live {
+    background: var(--green-light);
+    color: #16a34a;
+    display: flex; align-items: center; gap: 5px;
+  }
+
+  /* Alerts list */
+  .alert-list { padding: 8px 0; }
+  .alert-item {
+    display: flex; align-items: flex-start; gap: 13px;
+    padding: 13px 20px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .alert-item:last-child { border-bottom: none; }
+  .alert-item:hover { background: var(--bg); }
+  .alert-dot {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; margin-top: 1px;
+  }
+  .alert-dot.high { background: var(--red-light); }
+  .alert-dot.medium { background: var(--orange-light); }
+  .alert-dot.low { background: var(--green-light); }
+  .alert-time { font-size: 12px; color: var(--text3); font-weight: 500; margin-bottom: 2px; }
+  .alert-name { font-size: 14px; font-weight: 500; color: var(--text); }
+
+  /* Chart */
+  .chart-wrap { padding: 16px 20px 12px; position: relative; height: 220px; }
+
+  /* Stats cards */
+  .stat-card { padding: 22px 20px; }
+  .stat-label { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 14px; }
+  .stat-value-row { display: flex; align-items: center; gap: 12px; }
+  .stat-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .stat-num { font-size: 36px; font-weight: 700; color: var(--text); }
+  .donut-wrap { display: flex; align-items: center; gap: 14px; }
+  .donut-canvas-wrap { width: 52px; height: 52px; position: relative; }
+  .donut-canvas-wrap canvas { width: 52px !important; height: 52px !important; }
+  .status-icon { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+  .stat-sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
+
+  /* ===== ALERT DETAILS ===== */
+  .alert-detail-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; }
+  .alert-detail-header {
+    padding: 22px 24px;
+    display: flex; gap: 16px; align-items: flex-start;
+    border-bottom: 1px solid var(--border);
+  }
+  .alert-big-icon {
+    width: 44px; height: 44px; border-radius: 50%; background: var(--red);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 20px; flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(239,68,68,0.35);
+  }
+  .alert-detail-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .alert-detail-sub { font-size: 13px; color: var(--text2); }
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .detail-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 15px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { font-size: 13px; color: var(--text2); font-weight: 500; }
+  .detail-value { font-size: 14px; font-weight: 600; color: var(--text); font-family: var(--mono); }
+  .severity-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 11px; border-radius: 20px;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .severity-badge.high { background: var(--orange); color: white; }
+  .severity-badge.medium { background: var(--orange); color: white; }
+  .severity-badge.low { background: var(--green); color: white; }
+  .recommended-box {
+    margin: 0 24px 20px;
+    padding: 14px 16px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .rec-icon { font-size: 18px; margin-top: 1px; }
+  .rec-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .rec-text { font-size: 13px; color: var(--text2); }
+  .rec-text strong { color: var(--text); }
+  .detail-actions {
+    padding: 16px 24px;
+    display: flex; justify-content: flex-end; gap: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    padding: 9px 20px; border-radius: 9px; font-family: var(--font); font-size: 14px;
+    font-weight: 600; cursor: pointer; border: none; transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .btn-primary { background: var(--blue); color: white; box-shadow: 0 2px 8px rgba(37,99,235,0.3); }
+  .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.4); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--bg); color: var(--text); }
+  .btn-danger { background: var(--red); color: white; }
+  .btn-danger:hover { background: #dc2626; }
+  .btn-sm { padding: 6px 14px; font-size: 13px; }
+
+  /* ===== NETWORK LOGS ===== */
+  .search-row {
+    display: flex; gap: 10px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .search-input-wrap { flex: 1; position: relative; }
+  .search-input-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); }
+  .search-input {
+    width: 100%; padding: 9px 14px 9px 36px;
+    border: 1px solid var(--border); border-radius: 9px;
+    background: var(--surface2); font-family: var(--font); font-size: 14px;
+    color: var(--text); outline: none; transition: border 0.15s;
+  }
+  .search-input:focus { border-color: var(--blue); background: white; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+  .filter-select {
+    padding: 9px 14px; border: 1px solid var(--border); border-radius: 9px;
+    background: var(--surface2); font-family: var(--font); font-size: 13px;
+    color: var(--text2); outline: none; cursor: pointer; min-width: 110px;
+  }
+
+  /* Table */
+  .log-table { width: 100%; border-collapse: collapse; }
+  .log-table th {
+    text-align: left; padding: 11px 16px; font-size: 12px; font-weight: 600;
+    color: var(--text3); background: var(--surface2); border-bottom: 1px solid var(--border);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .log-table th:first-child { padding-left: 20px; }
+  .log-table td { padding: 13px 16px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+  .log-table td:first-child { padding-left: 20px; }
+  .log-table tr:last-child td { border-bottom: none; }
+  .log-table tbody tr { cursor: pointer; transition: background 0.1s; }
+  .log-table tbody tr:hover { background: var(--surface2); }
+  .event-cell { display: flex; align-items: center; gap: 8px; }
+  .event-dot { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+  .event-dot.error { background: var(--red-light); color: var(--red); }
+  .event-dot.success { background: var(--green-light); color: var(--green); }
+  .mono { font-family: var(--mono); font-size: 12.5px; color: var(--text2); }
+  .timestamp-cell { font-family: var(--mono); font-size: 12.5px; color: var(--text2); }
+
+  /* Pagination */
+  .pagination {
+    padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid var(--border);
+    font-size: 13px; color: var(--text2);
+  }
+  .page-controls { display: flex; align-items: center; gap: 4px; }
+  .page-btn {
+    min-width: 32px; height: 32px; padding: 0 10px; border-radius: 7px;
+    border: 1px solid var(--border); background: var(--surface); cursor: pointer;
+    font-family: var(--font); font-size: 13px; color: var(--text2);
+    display: flex; align-items: center; justify-content: center; transition: all 0.1s;
+  }
+  .page-btn:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
+  .page-btn.active { background: var(--blue); color: white; border-color: var(--blue); font-weight: 600; }
+  .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .page-next-btn {
+    display: flex; align-items: center; gap: 4px;
+    background: none; border: none; color: var(--blue); font-family: var(--font);
+    font-size: 13px; font-weight: 600; cursor: pointer; padding: 4px 6px; border-radius: 6px;
+  }
+  .page-next-btn:hover { background: var(--blue-light); }
+
+  /* ===== SETTINGS ===== */
+  .settings-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+  }
+  .settings-section { padding: 20px; }
+  .settings-section-title { font-size: 15px; font-weight: 700; margin-bottom: 18px; color: var(--text); }
+  .setting-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-label { font-size: 14px; color: var(--text); font-weight: 500; }
+  .setting-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+  /* Toggle */
+  .toggle { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute; inset: 0; border-radius: 13px;
+    background: #d1d5db; cursor: pointer; transition: background 0.2s;
+  }
+  .toggle input:checked + .toggle-track { background: var(--blue); }
+  .toggle-thumb {
+    position: absolute; top: 3px; left: 3px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: white; transition: transform 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    pointer-events: none;
+  }
+  .toggle input:checked ~ .toggle-thumb { transform: translateX(20px); }
+
+  /* Select */
+  .settings-select {
+    padding: 8px 12px; border: 1px solid var(--border);
+    border-radius: 8px; background: var(--surface2); font-family: var(--font);
+    font-size: 13.5px; color: var(--text); outline: none; cursor: pointer; min-width: 130px;
+    transition: border 0.15s;
+  }
+  .settings-select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+  /* Password input */
+  .pw-wrap { position: relative; min-width: 160px; }
+  .pw-input {
+    width: 100%; padding: 8px 36px 8px 12px;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface2); font-family: var(--mono); font-size: 13px;
+    color: var(--text); outline: none; transition: border 0.15s;
+  }
+  .pw-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); background: white; }
+  .pw-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text3); background: none; border: none; font-size: 15px; }
+
+  /* Settings actions */
+  .settings-footer { padding: 20px; display: flex; justify-content: center; border-top: 1px solid var(--border); }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 28px; right: 28px;
+    background: var(--text); color: white;
+    padding: 13px 20px; border-radius: 12px;
+    font-size: 14px; font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000; display: flex; align-items: center; gap: 9px;
+    transform: translateY(80px); opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { background: #16a34a; }
+  .toast.error { background: var(--red); }
+  .toast.info { background: var(--blue); }
+
+  /* Live update banner */
+  .live-banner {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--blue-light); border: 1px solid var(--blue-mid);
+    border-radius: 10px; padding: 10px 16px; margin-bottom: 18px;
+    font-size: 13px; color: var(--blue); font-weight: 500;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .dashboard-bottom { grid-template-columns: 1fr; }
+    .settings-grid { grid-template-columns: 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Chart container for traffic chart */
+  .traffic-chart-container { padding: 8px 16px 16px; height: 220px; }
+
+  /* Empty state */
+  .empty-state { padding: 40px; text-align: center; color: var(--text3); }
+  .empty-state div { font-size: 32px; margin-bottom: 10px; }
+
+  /* Acknowledged badge */
+  .ack-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 20px;
+    background: var(--green-light); color: #16a34a;
+    font-size: 11px; font-weight: 700; border: 1px solid #bbf7d0;
+  }
+
+  /* Nav tabs */
+  .nav-tabs { display: flex; gap: 2px; }
+  .nav-tab {
+    padding: 7px 14px; border-radius: 8px; border: none;
+    background: none; cursor: pointer; font-family: var(--font);
+    font-size: 13.5px; font-weight: 500; color: var(--text2);
+    transition: all 0.15s;
+  }
+  .nav-tab:hover { background: var(--bg); color: var(--text); }
+  .nav-tab.active { background: var(--blue-light); color: var(--blue); font-weight: 600; }
+
+  /* Severity colors for log table */
+  .sev-high { background: var(--red); color: white; }
+  .sev-medium { background: var(--orange); color: white; }
+  .sev-low { background: var(--green); color: white; }
+
+  /* New alert flash */
+  @keyframes newAlertFlash {
+    0% { background: #eff4ff; }
+    50% { background: #dbeafe; }
+    100% { background: transparent; }
+  }
+  .alert-item.new { animation: newAlertFlash 1.5s ease; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand" onclick="showView('dashboard')" style="cursor:pointer">
+    <img src="data:image/png;base64,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2loKWeqnfybHDGXuPkBzU0bfbAX+5uiq9UTi0Uhw4wMw+dw93uZ65PgrF6W0rp7S9EKSxWmmoox2uY3L3+LnH2nHzK9peMzyjss9GhcK7+37L5n3D8mqoele+J93Z938jXNGaJ01pGAx2O2RQSOaGvnd7Urx4uPP07FsaIudnZKyXFN7s6SuuFUeGC2XgERF4PYREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQH//Z" alt="AI Network Anomaly Dashboard" style="height:70px;width:auto;object-fit:contain;"/>
+  </div>
+  <div class="nav-tabs" id="navTabs">
+    <button class="nav-tab active" onclick="showView('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="showView('logs')">Network Logs</button>
+    <button class="nav-tab" onclick="showView('settings')">Settings</button>
+  </div>
+  <div class="nav-right">
+    <div class="nav-status"><div class="status-dot"></div>Monitoring Active</div>
+    <div class="user-pill">
+      <div class="user-avatar">👤</div>
+      <span>student</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ===================== DASHBOARD VIEW ===================== -->
+<div class="view active" id="view-dashboard">
+  <div class="live-banner">
+    <div class="status-dot"></div>
+    <strong>Live Feed Active</strong> — AI engine is monitoring network traffic in real time. Last scan: <span id="lastScan">just now</span>
+  </div>
+
+  <div class="dashboard-grid">
+    <!-- Real-Time Alerts -->
+    <div class="card">
+      <div class="card-header">
+        Real-Time Alerts
+        <span class="card-header-tag" id="alertCountBadge">5 Active</span>
+      </div>
+      <div class="alert-list" id="alertList"></div>
+    </div>
+
+    <!-- Network Traffic Chart -->
+    <div class="card">
+      <div class="card-header">
+        Network Traffic
+        <span class="card-header-tag live"><div class="status-dot" style="width:6px;height:6px"></div>LIVE</span>
+      </div>
+      <div class="traffic-chart-container">
+        <canvas id="trafficChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom stats -->
+  <div class="dashboard-bottom" style="margin-top:18px">
+    <div class="card stat-card">
+      <div class="stat-label">Anomalies Detected</div>
+      <div class="stat-value-row">
+        <div class="stat-icon" style="background:#fef2f2">❌</div>
+        <div class="stat-num" id="anomalyCount">5</div>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-label">Traffic Volume</div>
+      <div class="donut-wrap">
+        <div class="donut-canvas-wrap"><canvas id="donutChart"></canvas></div>
+        <div>
+          <div class="stat-num" style="font-size:28px" id="trafficVolPct">70%</div>
+          <div class="stat-sub">of capacity</div>
+        </div>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-label">System Status</div>
+      <div class="stat-value-row">
+        <div class="status-icon" id="statusIcon" style="background:#dcfce7; font-size:26px">✅</div>
+        <div>
+          <div style="font-size:18px;font-weight:700" id="statusText">Normal</div>
+          <div class="stat-sub" id="statusSub">All systems operational</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== ALERT DETAIL VIEW ===================== -->
+<div class="view" id="view-alertDetail">
+  <div class="page-header">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <h1 class="page-title">Alert Details</h1>
+  </div>
+  <div class="alert-detail-card">
+    <div class="alert-detail-header">
+      <div class="alert-big-icon" id="alertDetailIcon">❗</div>
+      <div>
+        <div class="alert-detail-title" id="alertDetailTitle">Suspicious Network Activity</div>
+        <div class="alert-detail-sub" id="alertDetailSub">Anomalous network behavior detected at 10:32 AM indicating suspicious activity.</div>
+      </div>
+      <div id="alertAckBadge" style="margin-left:auto"></div>
+    </div>
+    <div class="detail-grid">
+      <div>
+        <div class="detail-row">
+          <span class="detail-label">Timestamp</span>
+          <span class="detail-value" id="dTimestamp">10:32 AM</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Source IP</span>
+          <span class="detail-value" id="dSourceIP">192.168.1.102</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Destination IP</span>
+          <span class="detail-value" id="dDestIP">203.0.113.45</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Affected Device</span>
+          <span class="detail-value" id="dDevice">Office-PC-12</span>
+        </div>
+      </div>
+      <div>
+        <div class="detail-row">
+          <span class="detail-label">Severity</span>
+          <span id="dSeverity"></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Protocol</span>
+          <span class="detail-value" id="dProtocol">TCP</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Port</span>
+          <span class="detail-value" id="dPort">443</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">AI Confidence</span>
+          <span class="detail-value" id="dConfidence">94.2%</span>
+        </div>
+      </div>
+    </div>
+    <div class="recommended-box" id="recBox">
+      <div class="rec-icon">💡</div>
+      <div>
+        <div class="rec-title">Recommended Action</div>
+        <div class="rec-text" id="recText">Investigate the unusual <strong>traffic</strong> originating from source IP 192.168.1.102.</div>
+      </div>
+    </div>
+    <div class="detail-actions">
+      <button class="btn btn-ghost" onclick="goBack()">← Back</button>
+      <button class="btn btn-primary" id="ackBtn" onclick="acknowledgeAlert()">✓ Acknowledge Alert</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== NETWORK LOGS VIEW ===================== -->
+<div class="view" id="view-logs">
+  <div class="page-header">
+    <h1 class="page-title">Network Logs</h1>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="exportLogs()">⬇ Export CSV</button>
+      <button class="btn btn-primary btn-sm" onclick="refreshLogs()">↻ Refresh</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="search-row">
+      <div class="search-input-wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="search-input" id="searchInput" placeholder="Search logs by event, IP, or device..." oninput="filterLogs()"/>
+      </div>
+      <select class="filter-select" id="severityFilter" onchange="filterLogs()">
+        <option value="">All Severity</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="filterLogs()">Search</button>
+    </div>
+    <table class="log-table">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Event</th>
+          <th>Source</th>
+          <th>Destination</th>
+          <th>Device</th>
+          <th>Severity</th>
+        </tr>
+      </thead>
+      <tbody id="logsTableBody"></tbody>
+    </table>
+    <div class="pagination">
+      <span id="paginationInfo">Showing 1 to 10 of 25 results</span>
+      <div class="page-controls" id="pageControls"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SETTINGS VIEW ===================== -->
+<div class="view" id="view-settings">
+  <div class="page-header">
+    <h1 class="page-title">Settings</h1>
+  </div>
+  <div class="settings-grid">
+    <!-- Left col -->
+    <div class="card">
+      <div class="settings-section">
+        <div class="settings-section-title">Notification Preferences</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Email Alerts</div>
+            <div class="setting-sub">Receive alerts via email</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="tog-email" checked/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">SMS Alerts</div>
+            <div class="setting-sub">Receive alerts via SMS</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="tog-sms"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Push Notifications</div>
+            <div class="setting-sub">Browser push notifications</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="tog-push" checked/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border)"/>
+      <div class="settings-section">
+        <div class="settings-section-title">Alert Sensitivity</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Detection Sensitivity</div>
+            <div class="setting-sub">AI anomaly threshold</div>
+          </div>
+          <select class="settings-select" id="sel-sensitivity">
+            <option>Low</option>
+            <option selected>Medium</option>
+            <option>High</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Two-Factor Authentication</div>
+            <div class="setting-sub">Require 2FA on login</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="tog-2fa" checked/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right col -->
+    <div>
+      <div class="card" style="margin-bottom:18px">
+        <div class="settings-section">
+          <div class="settings-section-title">Alert Sensitivity</div>
+          <div class="setting-row">
+            <div class="setting-label">Detection Sensitivity</div>
+            <select class="settings-select" id="sel-sensitivity2">
+              <option>Low</option>
+              <option selected>Medium</option>
+              <option>High</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:18px">
+        <div class="settings-section">
+          <div class="settings-section-title">Account Settings</div>
+          <div class="setting-row">
+            <div class="setting-label">Change Password</div>
+            <div class="pw-wrap">
+              <input type="password" class="pw-input" id="pwInput" placeholder="New password" value=""/>
+              <button class="pw-toggle" onclick="togglePw()">👁</button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Two-Factor Authentication</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="tog-2fa2" checked/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="settings-section">
+          <div class="settings-section-title">Dashboard Appearance</div>
+          <div class="setting-row">
+            <div class="setting-label">Theme</div>
+            <select class="settings-select" id="sel-theme" onchange="changeTheme(this.value)">
+              <option value="Light" selected>Light</option>
+              <option value="Dark">Dark</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">Refresh Interval</div>
+            <select class="settings-select" id="sel-refresh">
+              <option>5 seconds</option>
+              <option selected>10 seconds</option>
+              <option>30 seconds</option>
+              <option>1 minute</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:center;margin-top:22px">
+    <button class="btn btn-primary" style="padding:11px 40px;font-size:15px" onclick="saveSettings()">💾 Save Settings</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const ALL_LOGS = [
+  { id:1,  time:"10:32 AM", event:"Suspicious network activity",  source:"192.168.1.102", dest:"203.0.113.45",  device:"Office-PC-12",   severity:"High",   protocol:"TCP",  port:443,  confidence:94.2, rec:"Investigate unusual traffic from 192.168.1.102. Block outbound if unauthorized.",     icon:"error" },
+  { id:2,  time:"10:25 AM", event:"Successful login",              source:"10.0.0.15",     dest:"192.168.1.50", device:"Laptop-07",      severity:"Low",    protocol:"HTTPS",port:443,  confidence:99.1, rec:"No action required. Login verified from known device.",                               icon:"success" },
+  { id:3,  time:"10:20 AM", event:"Normal traffic",                source:"172.16.0.20",   dest:"203.0.113.45", device:"Server-02",      severity:"Low",    protocol:"UDP",  port:53,   confidence:98.5, rec:"No action required. Traffic within normal parameters.",                               icon:"success" },
+  { id:4,  time:"10:15 AM", event:"Possible data exfiltration",    source:"192.168.1.150", dest:"8.8.8.8",      device:"Workstation-05", severity:"Medium", protocol:"TCP",  port:8080, confidence:81.7, rec:"Review outbound data volume from 192.168.1.150. Check for unauthorized file transfers.", icon:"error" },
+  { id:5,  time:"10:10 AM", event:"Unusual connection pattern",    source:"10.0.0.30",     dest:"192.168.1.12", device:"Office-PC-03",   severity:"Medium", protocol:"TCP",  port:22,   confidence:76.3, rec:"Investigate repeated SSH attempts from 10.0.0.30. Consider rate limiting.",             icon:"error" },
+  { id:6,  time:"10:10 AM", event:"Suspicious network activity",   source:"10.0.0.30",     dest:"192.168.1.12", device:"Office-PC-03",   severity:"Medium", protocol:"TCP",  port:445,  confidence:88.9, rec:"Investigate SMB activity from 10.0.0.30. Check for lateral movement.",                 icon:"error" },
+  { id:7,  time:"10:05 AM", event:"Port scan detected",            source:"203.0.113.99",  dest:"192.168.0.1",  device:"Gateway-01",     severity:"High",   protocol:"TCP",  port:0,    confidence:97.1, rec:"Block 203.0.113.99 at firewall immediately. Port scan in progress.",                   icon:"error" },
+  { id:8,  time:"10:02 AM", event:"Failed login attempt",          source:"192.168.1.88",  dest:"10.0.0.1",     device:"AD-Server",      severity:"Medium", protocol:"LDAP", port:389,  confidence:85.4, rec:"Lock account after repeated failures. Notify admin.",                                  icon:"error" },
+  { id:9,  time:"09:58 AM", event:"Normal traffic",                source:"10.0.0.5",      dest:"172.16.0.10",  device:"Printer-01",     severity:"Low",    protocol:"UDP",  port:9100, confidence:99.8, rec:"No action required.",                                                                  icon:"success" },
+  { id:10, time:"09:55 AM", event:"DNS anomaly detected",          source:"192.168.1.200", dest:"1.1.1.1",      device:"Office-PC-15",   severity:"Medium", protocol:"DNS",  port:53,   confidence:79.2, rec:"Inspect DNS queries from 192.168.1.200 for tunneling.",                               icon:"error" },
+  { id:11, time:"09:48 AM", event:"Successful login",              source:"10.0.0.22",     dest:"192.168.1.50", device:"MacBook-04",     severity:"Low",    protocol:"HTTPS",port:443,  confidence:99.5, rec:"No action required.",                                                                  icon:"success" },
+  { id:12, time:"09:42 AM", event:"High bandwidth usage",          source:"192.168.1.77",  dest:"52.14.0.201",  device:"Server-04",      severity:"Medium", protocol:"TCP",  port:443,  confidence:72.8, rec:"Review traffic to 52.14.0.201. Check for bulk data transfer.",                        icon:"error" },
+  { id:13, time:"09:35 AM", event:"Malware signature match",       source:"192.168.1.45",  dest:"185.2.5.12",   device:"Office-PC-08",   severity:"High",   protocol:"TCP",  port:4444, confidence:96.6, rec:"Isolate Office-PC-08 immediately. Block 185.2.5.12 at perimeter.",                    icon:"error" },
+  { id:14, time:"09:28 AM", event:"Normal traffic",                source:"10.0.0.11",     dest:"10.0.0.254",   device:"Switch-02",      severity:"Low",    protocol:"ICMP", port:0,    confidence:99.2, rec:"No action required.",                                                                  icon:"success" },
+  { id:15, time:"09:20 AM", event:"Unauthorized VLAN hop",         source:"192.168.10.5",  dest:"192.168.20.1", device:"Switch-01",      severity:"High",   protocol:"802.1Q",port:0,  confidence:91.3, rec:"Investigate VLAN hopping from 192.168.10.5. Check switch config.",                    icon:"error" },
+  { id:16, time:"09:15 AM", event:"Successful login",              source:"10.0.0.8",      dest:"192.168.1.50", device:"Desktop-09",     severity:"Low",    protocol:"HTTPS",port:443,  confidence:99.9, rec:"No action required.",                                                                  icon:"success" },
+  { id:17, time:"09:10 AM", event:"Brute force attempt",           source:"198.51.100.22", dest:"192.168.1.1",  device:"Router-01",      severity:"High",   protocol:"SSH",  port:22,   confidence:98.7, rec:"Block 198.51.100.22 and enable fail2ban on Router-01.",                               icon:"error" },
+  { id:18, time:"09:05 AM", event:"Normal traffic",                source:"172.16.0.5",    dest:"172.16.0.10",  device:"NAS-01",         severity:"Low",    protocol:"SMB",  port:445,  confidence:98.1, rec:"No action required.",                                                                  icon:"success" },
+  { id:19, time:"08:58 AM", event:"ARP spoofing detected",         source:"192.168.1.99",  dest:"192.168.1.1",  device:"Office-PC-20",   severity:"High",   protocol:"ARP",  port:0,    confidence:93.4, rec:"Investigate ARP from 192.168.1.99. Enable dynamic ARP inspection.",                  icon:"error" },
+  { id:20, time:"08:50 AM", event:"Unusual connection pattern",    source:"10.0.0.44",     dest:"10.0.0.100",   device:"Laptop-02",      severity:"Medium", protocol:"TCP",  port:3389, confidence:77.6, rec:"Review RDP connections from 10.0.0.44.",                                              icon:"error" },
+  { id:21, time:"08:42 AM", event:"Normal traffic",                source:"192.168.1.5",   dest:"8.8.8.8",      device:"Laptop-11",      severity:"Low",    protocol:"UDP",  port:53,   confidence:99.0, rec:"No action required.",                                                                  icon:"success" },
+  { id:22, time:"08:35 AM", event:"C2 beacon detected",            source:"192.168.1.130", dest:"45.77.200.12", device:"Office-PC-17",   severity:"High",   protocol:"TCP",  port:8443, confidence:95.8, rec:"Isolate Office-PC-17. Block 45.77.200.12 at firewall. Run malware scan.",            icon:"error" },
+  { id:23, time:"08:28 AM", event:"Successful login",              source:"10.0.0.3",      dest:"192.168.1.50", device:"Desktop-01",     severity:"Low",    protocol:"HTTPS",port:443,  confidence:99.7, rec:"No action required.",                                                                  icon:"success" },
+  { id:24, time:"08:20 AM", event:"Possible data exfiltration",    source:"192.168.1.66",  dest:"104.21.55.33", device:"Workstation-12", severity:"Medium", protocol:"HTTPS",port:443,  confidence:82.3, rec:"Inspect outbound HTTPS from 192.168.1.66 for large payload.",                         icon:"error" },
+  { id:25, time:"08:10 AM", event:"Normal traffic",                source:"10.0.0.18",     dest:"10.0.0.254",   device:"Phone-05",       severity:"Low",    protocol:"UDP",  port:5353, confidence:98.9, rec:"No action required.",                                                                  icon:"success" },
+];
+
+let filteredLogs = [...ALL_LOGS];
+let currentPage = 1;
+const logsPerPage = 8;
+let currentAlertId = null;
+let acknowledgedAlerts = new Set();
+
+// Traffic chart data
+let trafficData = [42, 48, 44, 52, 46, 55, 50, 60, 53, 58, 65, 70, 68, 75, 62, 69, 73, 80, 74, 77];
+let trafficChart, donutChart;
+
+// ============================================================
+// VIEWS
+// ============================================================
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach((t, i) => {
+    const tabs = ['dashboard', 'logs', 'settings'];
+    t.classList.toggle('active', tabs[i] === name);
+  });
+  if (name === 'logs') renderLogs();
+}
+
+function goBack() {
+  showView('dashboard');
+}
+
+// ============================================================
+// DASHBOARD ALERTS
+// ============================================================
+function getHighAlerts() {
+  return ALL_LOGS.filter(l => l.severity !== 'Low').slice(0, 5);
+}
+
+function renderAlerts() {
+  const list = document.getElementById('alertList');
+  const alerts = getHighAlerts();
+  list.innerHTML = alerts.map(a => `
+    <div class="alert-item" onclick="openAlert(${a.id})" id="alertItem-${a.id}">
+      <div class="alert-dot ${a.severity.toLowerCase()}">
+        ${a.severity === 'High' ? '❗' : a.severity === 'Medium' ? '⚠️' : '✅'}
+      </div>
+      <div>
+        <div class="alert-time">${a.time}</div>
+        <div class="alert-name">${a.event}</div>
+        <div class="mono">${a.source} → ${a.dest}</div>
+      </div>
+      ${acknowledgedAlerts.has(a.id) ? '<div class="ack-badge" style="margin-left:auto;align-self:center">✓ Ack</div>' : ''}
+    </div>
+  `).join('');
+  const active = ALL_LOGS.filter(l => l.severity === 'High' && !acknowledgedAlerts.has(l.id)).length;
+  document.getElementById('alertCountBadge').textContent = active + ' Active';
+  updateSystemStatus();
+}
+
+function updateSystemStatus() {
+  const highUnacked = ALL_LOGS.filter(l => l.severity === 'High' && !acknowledgedAlerts.has(l.id)).length;
+  const icon = document.getElementById('statusIcon');
+  const text = document.getElementById('statusText');
+  const sub = document.getElementById('statusSub');
+  if (highUnacked > 2) {
+    icon.textContent = '🔴'; icon.style.background = '#fef2f2';
+    text.textContent = 'Critical'; sub.textContent = highUnacked + ' high-severity alerts';
+  } else if (highUnacked > 0) {
+    icon.textContent = '⚠️'; icon.style.background = '#fff7ed';
+    text.textContent = 'Warning'; sub.textContent = highUnacked + ' alert(s) need attention';
+  } else {
+    icon.textContent = '✅'; icon.style.background = '#dcfce7';
+    text.textContent = 'Normal'; sub.textContent = 'All systems operational';
+  }
+  document.getElementById('anomalyCount').textContent = ALL_LOGS.filter(l => l.severity !== 'Low').length;
+}
+
+// ============================================================
+// ALERT DETAIL
+// ============================================================
+function openAlert(id) {
+  const a = ALL_LOGS.find(l => l.id === id);
+  if (!a) return;
+  currentAlertId = id;
+
+  document.getElementById('alertDetailIcon').textContent = a.severity === 'High' ? '❗' : '⚠️';
+  document.getElementById('alertDetailIcon').style.background = a.severity === 'High' ? 'var(--red)' : 'var(--orange)';
+  document.getElementById('alertDetailTitle').textContent = a.event;
+  document.getElementById('alertDetailSub').textContent = `Anomalous network behavior detected at ${a.time} indicating suspicious activity.`;
+  document.getElementById('dTimestamp').textContent = a.time;
+  document.getElementById('dSourceIP').textContent = a.source;
+  document.getElementById('dDestIP').textContent = a.dest;
+  document.getElementById('dDevice').textContent = a.device;
+  document.getElementById('dProtocol').textContent = a.protocol;
+  document.getElementById('dPort').textContent = a.port || 'N/A';
+  document.getElementById('dConfidence').textContent = a.confidence + '%';
+  document.getElementById('dSeverity').innerHTML = `<span class="severity-badge ${a.severity.toLowerCase()}">${a.severity === 'High' ? '🔥' : '🔥'} ${a.severity}</span>`;
+  document.getElementById('recText').innerHTML = a.rec.replace(/(\d+\.\d+\.\d+\.\d+)/g, '<strong>$1</strong>');
+
+  const ackBtn = document.getElementById('ackBtn');
+  const ackBadge = document.getElementById('alertAckBadge');
+  if (acknowledgedAlerts.has(id)) {
+    ackBtn.textContent = '✓ Acknowledged';
+    ackBtn.disabled = true;
+    ackBtn.style.opacity = '0.6';
+    ackBadge.innerHTML = '<span class="ack-badge">✓ Acknowledged</span>';
+  } else {
+    ackBtn.innerHTML = '✓ Acknowledge Alert';
+    ackBtn.disabled = false;
+    ackBtn.style.opacity = '';
+    ackBadge.innerHTML = '';
+  }
+
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-alertDetail').classList.add('active');
+}
+
+function acknowledgeAlert() {
+  if (!currentAlertId) return;
+  acknowledgedAlerts.add(currentAlertId);
+  showToast('✓ Alert acknowledged successfully', 'success');
+  const btn = document.getElementById('ackBtn');
+  btn.textContent = '✓ Acknowledged';
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  document.getElementById('alertAckBadge').innerHTML = '<span class="ack-badge">✓ Acknowledged</span>';
+  renderAlerts();
+}
+
+// ============================================================
+// NETWORK LOGS
+// ============================================================
+function filterLogs() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const sev = document.getElementById('severityFilter').value;
+  filteredLogs = ALL_LOGS.filter(l => {
+    const matchQ = !q || l.event.toLowerCase().includes(q) || l.source.includes(q) || l.dest.includes(q) || l.device.toLowerCase().includes(q);
+    const matchS = !sev || l.severity === sev;
+    return matchQ && matchS;
+  });
+  currentPage = 1;
+  renderLogs();
+}
+
+function renderLogs() {
+  const tbody = document.getElementById('logsTableBody');
+  const start = (currentPage - 1) * logsPerPage;
+  const page = filteredLogs.slice(start, start + logsPerPage);
+
+  if (page.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div>🔍</div>No matching logs found.</div></td></tr>';
+  } else {
+    tbody.innerHTML = page.map(l => `
+      <tr onclick="openAlert(${l.id})" ${l.severity !== 'Low' ? 'style="cursor:pointer"' : ''}>
+        <td class="timestamp-cell">${l.time}</td>
+        <td><div class="event-cell">
+          <div class="event-dot ${l.icon}">${l.icon === 'error' ? '❗' : '✅'}</div>
+          ${l.event}
+        </div></td>
+        <td class="mono">${l.source}</td>
+        <td class="mono">${l.dest}</td>
+        <td>${l.device}</td>
+        <td><span class="severity-badge ${l.severity.toLowerCase()}">${l.severity === 'High' ? '🔥' : l.severity === 'Medium' ? '🔥' : '✓'} ${l.severity}</span></td>
+      </tr>
+    `).join('');
+  }
+
+  const total = filteredLogs.length;
+  const end = Math.min(start + logsPerPage, total);
+  document.getElementById('paginationInfo').textContent = total === 0 ? 'No results' : `Showing ${start + 1} to ${end} of ${total} results`;
+  renderPagination(total);
+}
+
+function renderPagination(total) {
+  const totalPages = Math.ceil(total / logsPerPage);
+  const ctrl = document.getElementById('pageControls');
+  let html = `<button class="page-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>←</button>`;
+  for (let i = 1; i <= totalPages; i++) {
+    if (totalPages > 7 && i > 3 && i < totalPages - 1 && Math.abs(i - currentPage) > 1) {
+      if (i === 4) html += '<span style="padding:0 4px;color:var(--text3)">…</span>';
+      continue;
+    }
+    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+  }
+  html += `<button class="page-btn" onclick="changePage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}>→</button>`;
+  html += `<button class="page-next-btn" onclick="changePage(${currentPage + 1})" ${currentPage >= totalPages ? 'style="display:none"' : ''}>Next ›</button>`;
+  ctrl.innerHTML = html;
+}
+
+function changePage(p) {
+  const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
+  if (p < 1 || p > totalPages) return;
+  currentPage = p;
+  renderLogs();
+}
+
+function refreshLogs() {
+  filterLogs();
+  showToast('↻ Logs refreshed', 'info');
+}
+
+function exportLogs() {
+  const csv = ['Timestamp,Event,Source,Destination,Device,Severity',
+    ...filteredLogs.map(l => `${l.time},"${l.event}",${l.source},${l.dest},${l.device},${l.severity}`)
+  ].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'network_logs.csv';
+  a.click();
+  showToast('⬇ Logs exported as CSV', 'success');
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function saveSettings() {
+  showToast('💾 Settings saved successfully', 'success');
+}
+
+function togglePw() {
+  const inp = document.getElementById('pwInput');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function changeTheme(val) {
+  if (val === 'Dark') {
+    document.documentElement.style.setProperty('--bg', '#0f172a');
+    document.documentElement.style.setProperty('--surface', '#1e293b');
+    document.documentElement.style.setProperty('--surface2', '#253348');
+    document.documentElement.style.setProperty('--border', '#334155');
+    document.documentElement.style.setProperty('--border2', '#475569');
+    document.documentElement.style.setProperty('--text', '#f1f5f9');
+    document.documentElement.style.setProperty('--text2', '#94a3b8');
+    document.documentElement.style.setProperty('--text3', '#64748b');
+  } else {
+    document.documentElement.style.setProperty('--bg', '#f0f2f5');
+    document.documentElement.style.setProperty('--surface', '#ffffff');
+    document.documentElement.style.setProperty('--surface2', '#f8f9fb');
+    document.documentElement.style.setProperty('--border', '#e4e8ef');
+    document.documentElement.style.setProperty('--border2', '#d0d7e3');
+    document.documentElement.style.setProperty('--text', '#1a2236');
+    document.documentElement.style.setProperty('--text2', '#5a6a85');
+    document.documentElement.style.setProperty('--text3', '#8a9ab5');
+  }
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ============================================================
+// CHARTS
+// ============================================================
+function initTrafficChart() {
+  const ctx = document.getElementById('trafficChart').getContext('2d');
+  const labels = trafficData.map((_, i) => {
+    const m = 10 * 60 + (20 - i) * 2;
+    return `${Math.floor(m/60).toString().padStart(2,'0')}:${(m%60).toString().padStart(2,'0')}`;
+  }).reverse();
+
+  trafficChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: [...trafficData],
+        borderColor: '#2563eb',
+        borderWidth: 2.5,
+        backgroundColor: 'rgba(37,99,235,0.07)',
+        fill: true,
+        tension: 0.45,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
+        mode: 'index', intersect: false,
+        callbacks: { label: ctx => ` Traffic: ${ctx.raw}%` }
+      }},
+      scales: {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 6, color: '#94a3b8', font: { size: 11 } } },
+        y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#94a3b8', font: { size: 11 }, callback: v => v + '%' }, min: 20, max: 100 }
+      },
+      animation: { duration: 300 }
+    }
+  });
+}
+
+function initDonutChart() {
+  const ctx = document.getElementById('donutChart').getContext('2d');
+  donutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: [70, 30],
+        backgroundColor: ['#2563eb', '#e2e8f0'],
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '72%',
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      animation: { duration: 600 }
+    }
+  });
+}
+
+// ============================================================
+// LIVE SIMULATION
+// ============================================================
+let simInterval;
+let scanSeconds = 0;
+
+function startSimulation() {
+  simInterval = setInterval(() => {
+    scanSeconds++;
+
+    // Update last scan time
+    const el = document.getElementById('lastScan');
+    if (el) el.textContent = scanSeconds < 60 ? scanSeconds + 's ago' : Math.floor(scanSeconds/60) + 'm ago';
+
+    // Update traffic chart
+    const newVal = Math.max(25, Math.min(95, trafficData[trafficData.length - 1] + (Math.random() - 0.45) * 8));
+    trafficData.push(Math.round(newVal));
+    trafficData.shift();
+
+    if (trafficChart) {
+      trafficChart.data.datasets[0].data = [...trafficData];
+      trafficChart.update('none');
+    }
+
+    // Occasionally add a new live alert (every ~30s)
+    if (scanSeconds % 30 === 0) {
+      const pct = Math.round(Math.min(95, Math.max(30, newVal)));
+      if (donutChart) {
+        donutChart.data.datasets[0].data = [pct, 100 - pct];
+        donutChart.update();
+      }
+      document.getElementById('trafficVolPct').textContent = pct + '%';
+    }
+  }, 2000);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  renderAlerts();
+  renderLogs();
+  initTrafficChart();
+  initDonutChart();
+  startSimulation();
+});
+</script>
+</body>
+</html>
