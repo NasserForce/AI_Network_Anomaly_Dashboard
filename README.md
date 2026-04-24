@@ -14,10 +14,12 @@ Features a settings panel for notification preferences, detection sensitivity, a
 
 
 Purpose
+
 This project was built to explore how AI and data visualization can work together to make cybersecurity tools more intuitive and actionable. Rather than presenting raw logs that require expert interpretation, the dashboard translates network events into clear, prioritized alerts with guidance on what to do next.
 The prototype uses simulated data to demonstrate the full user experience. In a real-world deployment, it would connect to a backend capturing live network packets and running a trained machine learning model for anomaly detection.
 
 Innovation
+
 Most network monitoring tools are designed for experts and present overwhelming amounts of raw data. This dashboard takes a different approach — using AI severity classification, confidence scoring, and plain-language recommendations to make threat detection accessible to anyone responsible for a network, including students learning cybersecurity for the first time.
 
 Deliverables
@@ -30,5 +32,7 @@ SIP poster and project presentation
 
 
 Credits
+
+
 Built with HTML, CSS, JavaScript, and Chart.js.
 Fonts by Google Fonts.
