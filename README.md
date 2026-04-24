@@ -1,4 +1,5 @@
 About This Project
+
 The AI Network Anomaly Dashboard is a web-based prototype that demonstrates how artificial intelligence can be used to monitor network traffic in real time, detect suspicious activity, and alert IT operators through a clean, interactive interface.
 The goal was to make network security more accessible — giving students, IT teams, and network engineers a tool that surfaces threats clearly and recommends actions, without requiring deep technical expertise to understand what's happening on the network.
 
