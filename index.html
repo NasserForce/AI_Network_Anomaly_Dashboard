@@ -806,35 +806,10 @@
 // ============================================================
 // DATA
 // ============================================================
-const ALL_LOGS = [
-  { id:1,  time:"10:32 AM", event:"Suspicious network activity",  source:"192.168.1.102", dest:"203.0.113.45",  device:"Office-PC-12",   severity:"High",   protocol:"TCP",  port:443,  confidence:94.2, rec:"Investigate unusual traffic from 192.168.1.102. Block outbound if unauthorized.",     icon:"error" },
-  { id:2,  time:"10:25 AM", event:"Successful login",              source:"10.0.0.15",     dest:"192.168.1.50", device:"Laptop-07",      severity:"Low",    protocol:"HTTPS",port:443,  confidence:99.1, rec:"No action required. Login verified from known device.",                               icon:"success" },
-  { id:3,  time:"10:20 AM", event:"Normal traffic",                source:"172.16.0.20",   dest:"203.0.113.45", device:"Server-02",      severity:"Low",    protocol:"UDP",  port:53,   confidence:98.5, rec:"No action required. Traffic within normal parameters.",                               icon:"success" },
-  { id:4,  time:"10:15 AM", event:"Possible data exfiltration",    source:"192.168.1.150", dest:"8.8.8.8",      device:"Workstation-05", severity:"Medium", protocol:"TCP",  port:8080, confidence:81.7, rec:"Review outbound data volume from 192.168.1.150. Check for unauthorized file transfers.", icon:"error" },
-  { id:5,  time:"10:10 AM", event:"Unusual connection pattern",    source:"10.0.0.30",     dest:"192.168.1.12", device:"Office-PC-03",   severity:"Medium", protocol:"TCP",  port:22,   confidence:76.3, rec:"Investigate repeated SSH attempts from 10.0.0.30. Consider rate limiting.",             icon:"error" },
-  { id:6,  time:"10:10 AM", event:"Suspicious network activity",   source:"10.0.0.30",     dest:"192.168.1.12", device:"Office-PC-03",   severity:"Medium", protocol:"TCP",  port:445,  confidence:88.9, rec:"Investigate SMB activity from 10.0.0.30. Check for lateral movement.",                 icon:"error" },
-  { id:7,  time:"10:05 AM", event:"Port scan detected",            source:"203.0.113.99",  dest:"192.168.0.1",  device:"Gateway-01",     severity:"High",   protocol:"TCP",  port:0,    confidence:97.1, rec:"Block 203.0.113.99 at firewall immediately. Port scan in progress.",                   icon:"error" },
-  { id:8,  time:"10:02 AM", event:"Failed login attempt",          source:"192.168.1.88",  dest:"10.0.0.1",     device:"AD-Server",      severity:"Medium", protocol:"LDAP", port:389,  confidence:85.4, rec:"Lock account after repeated failures. Notify admin.",                                  icon:"error" },
-  { id:9,  time:"09:58 AM", event:"Normal traffic",                source:"10.0.0.5",      dest:"172.16.0.10",  device:"Printer-01",     severity:"Low",    protocol:"UDP",  port:9100, confidence:99.8, rec:"No action required.",                                                                  icon:"success" },
-  { id:10, time:"09:55 AM", event:"DNS anomaly detected",          source:"192.168.1.200", dest:"1.1.1.1",      device:"Office-PC-15",   severity:"Medium", protocol:"DNS",  port:53,   confidence:79.2, rec:"Inspect DNS queries from 192.168.1.200 for tunneling.",                               icon:"error" },
-  { id:11, time:"09:48 AM", event:"Successful login",              source:"10.0.0.22",     dest:"192.168.1.50", device:"MacBook-04",     severity:"Low",    protocol:"HTTPS",port:443,  confidence:99.5, rec:"No action required.",                                                                  icon:"success" },
-  { id:12, time:"09:42 AM", event:"High bandwidth usage",          source:"192.168.1.77",  dest:"52.14.0.201",  device:"Server-04",      severity:"Medium", protocol:"TCP",  port:443,  confidence:72.8, rec:"Review traffic to 52.14.0.201. Check for bulk data transfer.",                        icon:"error" },
-  { id:13, time:"09:35 AM", event:"Malware signature match",       source:"192.168.1.45",  dest:"185.2.5.12",   device:"Office-PC-08",   severity:"High",   protocol:"TCP",  port:4444, confidence:96.6, rec:"Isolate Office-PC-08 immediately. Block 185.2.5.12 at perimeter.",                    icon:"error" },
-  { id:14, time:"09:28 AM", event:"Normal traffic",                source:"10.0.0.11",     dest:"10.0.0.254",   device:"Switch-02",      severity:"Low",    protocol:"ICMP", port:0,    confidence:99.2, rec:"No action required.",                                                                  icon:"success" },
-  { id:15, time:"09:20 AM", event:"Unauthorized VLAN hop",         source:"192.168.10.5",  dest:"192.168.20.1", device:"Switch-01",      severity:"High",   protocol:"802.1Q",port:0,  confidence:91.3, rec:"Investigate VLAN hopping from 192.168.10.5. Check switch config.",                    icon:"error" },
-  { id:16, time:"09:15 AM", event:"Successful login",              source:"10.0.0.8",      dest:"192.168.1.50", device:"Desktop-09",     severity:"Low",    protocol:"HTTPS",port:443,  confidence:99.9, rec:"No action required.",                                                                  icon:"success" },
-  { id:17, time:"09:10 AM", event:"Brute force attempt",           source:"198.51.100.22", dest:"192.168.1.1",  device:"Router-01",      severity:"High",   protocol:"SSH",  port:22,   confidence:98.7, rec:"Block 198.51.100.22 and enable fail2ban on Router-01.",                               icon:"error" },
-  { id:18, time:"09:05 AM", event:"Normal traffic",                source:"172.16.0.5",    dest:"172.16.0.10",  device:"NAS-01",         severity:"Low",    protocol:"SMB",  port:445,  confidence:98.1, rec:"No action required.",                                                                  icon:"success" },
-  { id:19, time:"08:58 AM", event:"ARP spoofing detected",         source:"192.168.1.99",  dest:"192.168.1.1",  device:"Office-PC-20",   severity:"High",   protocol:"ARP",  port:0,    confidence:93.4, rec:"Investigate ARP from 192.168.1.99. Enable dynamic ARP inspection.",                  icon:"error" },
-  { id:20, time:"08:50 AM", event:"Unusual connection pattern",    source:"10.0.0.44",     dest:"10.0.0.100",   device:"Laptop-02",      severity:"Medium", protocol:"TCP",  port:3389, confidence:77.6, rec:"Review RDP connections from 10.0.0.44.",                                              icon:"error" },
-  { id:21, time:"08:42 AM", event:"Normal traffic",                source:"192.168.1.5",   dest:"8.8.8.8",      device:"Laptop-11",      severity:"Low",    protocol:"UDP",  port:53,   confidence:99.0, rec:"No action required.",                                                                  icon:"success" },
-  { id:22, time:"08:35 AM", event:"C2 beacon detected",            source:"192.168.1.130", dest:"45.77.200.12", device:"Office-PC-17",   severity:"High",   protocol:"TCP",  port:8443, confidence:95.8, rec:"Isolate Office-PC-17. Block 45.77.200.12 at firewall. Run malware scan.",            icon:"error" },
-  { id:23, time:"08:28 AM", event:"Successful login",              source:"10.0.0.3",      dest:"192.168.1.50", device:"Desktop-01",     severity:"Low",    protocol:"HTTPS",port:443,  confidence:99.7, rec:"No action required.",                                                                  icon:"success" },
-  { id:24, time:"08:20 AM", event:"Possible data exfiltration",    source:"192.168.1.66",  dest:"104.21.55.33", device:"Workstation-12", severity:"Medium", protocol:"HTTPS",port:443,  confidence:82.3, rec:"Inspect outbound HTTPS from 192.168.1.66 for large payload.",                         icon:"error" },
-  { id:25, time:"08:10 AM", event:"Normal traffic",                source:"10.0.0.18",     dest:"10.0.0.254",   device:"Phone-05",       severity:"Low",    protocol:"UDP",  port:5353, confidence:98.9, rec:"No action required.",                                                                  icon:"success" },
-];
-
-let filteredLogs = [...ALL_LOGS];
+// ── Live data from backend ──
+const API = 'http://127.0.0.1:5000/api';
+let ALL_LOGS = [];
+let filteredLogs = [];
 let currentPage = 1;
 const logsPerPage = 8;
 let currentAlertId = null;
@@ -864,48 +839,64 @@ function goBack() {
 // ============================================================
 // DASHBOARD ALERTS
 // ============================================================
-function getHighAlerts() {
-  return ALL_LOGS.filter(l => l.severity !== 'Low').slice(0, 5);
-}
+async function fetchAndRenderAlerts() {
+  try {
+    const [alertsRes, statusRes] = await Promise.all([
+      fetch(`${API}/alerts`), fetch(`${API}/status`)
+    ]);
+    const alerts = await alertsRes.json();
+    const status = await statusRes.json();
 
-function renderAlerts() {
-  const list = document.getElementById('alertList');
-  const alerts = getHighAlerts();
-  list.innerHTML = alerts.map(a => `
-    <div class="alert-item" onclick="openAlert(${a.id})" id="alertItem-${a.id}">
-      <div class="alert-dot ${a.severity.toLowerCase()}">
-        ${a.severity === 'High' ? '❗' : a.severity === 'Medium' ? '⚠️' : '✅'}
-      </div>
-      <div>
-        <div class="alert-time">${a.time}</div>
-        <div class="alert-name">${a.event}</div>
-        <div class="mono">${a.source} → ${a.dest}</div>
-      </div>
-      ${acknowledgedAlerts.has(a.id) ? '<div class="ack-badge" style="margin-left:auto;align-self:center">✓ Ack</div>' : ''}
-    </div>
-  `).join('');
-  const active = ALL_LOGS.filter(l => l.severity === 'High' && !acknowledgedAlerts.has(l.id)).length;
-  document.getElementById('alertCountBadge').textContent = active + ' Active';
-  updateSystemStatus();
-}
+    alerts.forEach(a => { if (!ALL_LOGS.find(l => l.id === a.id)) ALL_LOGS.unshift(a); });
 
-function updateSystemStatus() {
-  const highUnacked = ALL_LOGS.filter(l => l.severity === 'High' && !acknowledgedAlerts.has(l.id)).length;
-  const icon = document.getElementById('statusIcon');
-  const text = document.getElementById('statusText');
-  const sub = document.getElementById('statusSub');
-  if (highUnacked > 2) {
-    icon.textContent = '🔴'; icon.style.background = '#fef2f2';
-    text.textContent = 'Critical'; sub.textContent = highUnacked + ' high-severity alerts';
-  } else if (highUnacked > 0) {
-    icon.textContent = '⚠️'; icon.style.background = '#fff7ed';
-    text.textContent = 'Warning'; sub.textContent = highUnacked + ' alert(s) need attention';
-  } else {
-    icon.textContent = '✅'; icon.style.background = '#dcfce7';
-    text.textContent = 'Normal'; sub.textContent = 'All systems operational';
+    const list = document.getElementById('alertList');
+    if (alerts.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div>🟢</div>No active alerts detected yet.</div>';
+    } else {
+      list.innerHTML = alerts.slice(0, 5).map(a => `
+        <div class="alert-item" onclick="openAlert(${a.id})" id="alertItem-${a.id}">
+          <div class="alert-dot ${a.severity.toLowerCase()}">
+            ${a.severity === 'High' ? '❗' : '⚠️'}
+          </div>
+          <div>
+            <div class="alert-time">${a.time}</div>
+            <div class="alert-name">${a.event}</div>
+            <div class="mono">${a.source} → ${a.dest}</div>
+          </div>
+          ${acknowledgedAlerts.has(a.id) ? '<div class="ack-badge" style="margin-left:auto;align-self:center">✓ Ack</div>' : ''}
+        </div>
+      `).join('');
+    }
+
+    const activeCount = Math.max(0, (status.high_count || 0) - acknowledgedAlerts.size);
+    document.getElementById('alertCountBadge').textContent = activeCount + ' Active';
+    document.getElementById('anomalyCount').textContent = status.anomalies || 0;
+
+    const vol = status.traffic_volume || 0;
+    document.getElementById('trafficVolPct').textContent = vol + '%';
+    if (donutChart) { donutChart.data.datasets[0].data = [vol, 100 - vol]; donutChart.update(); }
+
+    const icon = document.getElementById('statusIcon');
+    const text = document.getElementById('statusText');
+    const sub  = document.getElementById('statusSub');
+    if (status.status === 'Critical') {
+      icon.textContent = '🔴'; icon.style.background = '#fef2f2';
+    } else if (status.status === 'Warning') {
+      icon.textContent = '⚠️'; icon.style.background = '#fff7ed';
+    } else {
+      icon.textContent = '✅'; icon.style.background = '#dcfce7';
+    }
+    text.textContent = status.status || 'Normal';
+    sub.textContent  = status.status_sub || 'All systems operational';
+    document.getElementById('lastScan').textContent = 'just now';
+  } catch (e) {
+    document.getElementById('alertList').innerHTML =
+      '<div class="empty-state"><div>⚠️</div>Cannot reach backend.<br><small>Make sure server.py is running.</small></div>';
   }
-  document.getElementById('anomalyCount').textContent = ALL_LOGS.filter(l => l.severity !== 'Low').length;
 }
+
+function renderAlerts() { fetchAndRenderAlerts(); }
+function updateSystemStatus() {}
 
 // ============================================================
 // ALERT DETAIL
@@ -962,6 +953,13 @@ function acknowledgeAlert() {
 // ============================================================
 // NETWORK LOGS
 // ============================================================
+async function fetchLogs() {
+  try {
+    const res = await fetch(`${API}/logs`);
+    ALL_LOGS = await res.json();
+  } catch(e) { /* server not up yet */ }
+}
+
 function filterLogs() {
   const q = document.getElementById('searchInput').value.toLowerCase();
   const sev = document.getElementById('severityFilter').value;
@@ -1026,9 +1024,10 @@ function changePage(p) {
   renderLogs();
 }
 
-function refreshLogs() {
+async function refreshLogs() {
+  await fetchLogs();
   filterLogs();
-  showToast('↻ Logs refreshed', 'info');
+  showToast('↻ Logs refreshed from live feed', 'info');
 }
 
 function exportLogs() {
@@ -1149,50 +1148,45 @@ function initDonutChart() {
 }
 
 // ============================================================
-// LIVE SIMULATION
+// LIVE POLLING — replaces simulation with real API data
 // ============================================================
-let simInterval;
-let scanSeconds = 0;
-
-function startSimulation() {
-  simInterval = setInterval(() => {
-    scanSeconds++;
-
-    // Update last scan time
-    const el = document.getElementById('lastScan');
-    if (el) el.textContent = scanSeconds < 60 ? scanSeconds + 's ago' : Math.floor(scanSeconds/60) + 'm ago';
-
-    // Update traffic chart
-    const newVal = Math.max(25, Math.min(95, trafficData[trafficData.length - 1] + (Math.random() - 0.45) * 8));
-    trafficData.push(Math.round(newVal));
-    trafficData.shift();
-
+async function pollTraffic() {
+  try {
+    const res = await fetch(`${API}/traffic`);
+    const history = await res.json();
+    if (!history.length) return;
+    const volumes = history.map(h => h.volume);
+    const labels  = history.map(h => h.time);
     if (trafficChart) {
-      trafficChart.data.datasets[0].data = [...trafficData];
+      trafficChart.data.labels = labels;
+      trafficChart.data.datasets[0].data = volumes;
       trafficChart.update('none');
     }
+  } catch(e) {}
+}
 
-    // Occasionally add a new live alert (every ~30s)
-    if (scanSeconds % 30 === 0) {
-      const pct = Math.round(Math.min(95, Math.max(30, newVal)));
-      if (donutChart) {
-        donutChart.data.datasets[0].data = [pct, 100 - pct];
-        donutChart.update();
-      }
-      document.getElementById('trafficVolPct').textContent = pct + '%';
+function startLivePolling() {
+  // Poll every 4 seconds
+  setInterval(async () => {
+    await fetchAndRenderAlerts();
+    await pollTraffic();
+    if (document.getElementById('view-logs').classList.contains('active')) {
+      await fetchLogs();
+      filterLogs();
     }
-  }, 2000);
+  }, 4000);
 }
 
 // ============================================================
 // INIT
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
-  renderAlerts();
-  renderLogs();
+document.addEventListener('DOMContentLoaded', async () => {
   initTrafficChart();
   initDonutChart();
-  startSimulation();
+  await fetchLogs();
+  renderAlerts();
+  renderLogs();
+  startLivePolling();
 });
 </script>
 </body>
